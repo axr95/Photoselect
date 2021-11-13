@@ -14,15 +14,21 @@ from time import time
 
 
 class SelectWindow(object):
+    def create_menu(self):
+        m = tk.Menu(title="Aktionen")
+        m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
+        m.add_separator()
+        m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
+        m.add_separator()
+        m.add_command(label="Auswahl kopieren", command=self.copy_marked)
+        m.add_command(label="Auswahl verschieben", command=self.move_marked)
+        m.add_command(label="Auswahl löschen", command=self.delete_marked)
+        return m
+
     def __init__(self, start_path=None):
         root = tk.Tk()
         root.title("Bitte Verzeichnis auswählen!")
         self.root = root
-
-        # configure column widths
-        column_widths = [3, 3, 2, 3]
-        for c, w in enumerate(column_widths):
-            root.grid_columnconfigure(c, weight=w)
 
         # store placeholder image
         self.placeholder = tk.PhotoImage(data=SelectImage.PLACEHOLDER_IMG_BASE64_GIF)
@@ -39,78 +45,19 @@ class SelectWindow(object):
 
         # max sizes of images
         self.mainSize = 600, 600
-        self.sideSize = 200, 200
 
-        # Top row (labels and "mark" button
-        lblBefore = tk.Label(root)
-        lblBefore.grid(column=0, row=0, sticky=tk.S)
+        self.menu = self.create_menu()
 
-        lblAfter = tk.Label(root)
-        lblAfter.grid(column=3, row=0, sticky=tk.S)
+        self.mainImage = tk.Label(root)
+        self.mainImage.pack(side="top")
 
-        lblCurrent = tk.Label(root)
-        lblCurrent.grid(column=1, row=0, sticky=tk.S)
+        self.imageControls.append(ImageControlsGroup(self, self.mainImage, tk.Label(root), 0, "MAIN", False))
 
-        self.btnMark = tk.Button(root, text="De-/Markieren")
-        self.btnMark.grid(column=2, row=0, sticky=tk.S)
-        self.btnMark.bind("<Button-1>", self.get_select_handler(0))
-
-
-        # main image boxes
-        imgBefore = tk.Label(root, image=self.placeholder)
-        imgBefore.grid(column=0, row=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        imgBefore.bind("<Button-1>", self.get_change_cur_handler(-1))
-
-        imgAfter = tk.Label(root, image=self.placeholder)
-        imgAfter.grid(column=3, row=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        imgAfter.bind("<Button-1>", self.get_change_cur_handler(1))
-
-        imgCurrent = tk.Label(root, image=self.placeholder)
-        imgCurrent.grid(column=1, row=1, columnspan=2, rowspan=2, sticky=tk.N+tk.S+tk.E+tk.W)
-        imgCurrent.bind("<Button-1>", self.get_select_handler(0))
-
-        # imageControlGroups
-        self.imageControls.append(ImageControlsGroup(self, imgCurrent, lblCurrent, 0, "MAIN"))
-        self.imageControls.append(ImageControlsGroup(self, imgBefore, lblBefore, -1, "SIDE"))
-        self.imageControls.append(ImageControlsGroup(self, imgAfter, lblAfter, 1, "SIDE"))
-
-        # other containers
-
-        # Verzeichnis
-        grpDirectory = tk.LabelFrame(root, text="Verzeichnis:")
-        grpDirectory.grid(column=0, row=2, sticky=tk.N)
-        grpDirectory.grid_propagate(0)
-
-        self.lblDirectory = tk.Label(grpDirectory, textvariable=self.path)
-        self.lblDirectory.pack(fill=tk.X)
-
-        btnChooseDirectory = tk.Button(grpDirectory, text="Verzeichnis auswählen", command=self.change_directory_handler)
-        btnChooseDirectory.pack(fill=tk.X)
-
-        btnMarkAll = tk.Button(grpDirectory, text="Alle markieren", command=self.mark_all_handler)
-        #btnMarkAll.grid(column=0, row=1, columnspan=2, sticky=tk.S+tk.W)
-        btnMarkAll.pack(fill=tk.X)
-
-        # Aktionen
-        grpActions = tk.LabelFrame(root, text="Markierte Dateien:")
-        grpActions.grid(column=3, row=2, sticky=tk.N)
-        grpActions.grid_propagate(0)
-
-        btnDeleteMarked = tk.Button(grpActions, text="Löschen", command=self.delete_marked)
-        btnDeleteMarked.pack(fill=tk.X)
-
-        btnMoveMarked = tk.Button(grpActions, text="Verschieben", command=self.move_marked)
-        btnMoveMarked.pack(fill=tk.X)
-
-        btnCopyMarked = tk.Button(grpActions, text="Kopieren", command=self.copy_marked)
-        btnCopyMarked.pack(fill=tk.X)
-
-        #btnOpenInWindows = tk.Button(grpActions, text="In Windows Explorer markieren", command=self.mark_in_windows)
-        #btnOpenInWindows.pack(fill=tk.X)
+        root.bind("<Button-3>", lambda ev: self.menu.tk_popup(ev.x_root, ev.y_root))
 
         # Preview (Thumbnails)
         grpPreviews = tk.Frame(root)
-        grpPreviews.grid(column=0, row=3, columnspan=4)
+        grpPreviews.pack(side="bottom")
 
         for idx in range(0, 9):
             lblPrev = tk.Label(grpPreviews, wraplength=SelectImage.THUMBNAIL_SIZE[0])
@@ -121,6 +68,7 @@ class SelectWindow(object):
             imgPrev.bind("<Double-Button-1>", self.get_change_cur_handler(idx - 4))
             controlsGroup = ImageControlsGroup(self, imgPrev, lblPrev, idx - 4, "THUMBNAIL", True)
             self.imageControls.append(controlsGroup)
+        self.grpPreviews = grpPreviews
 
         root.state("zoomed")
 
@@ -128,7 +76,7 @@ class SelectWindow(object):
 
         root.bind("<Left>", self.get_change_cur_handler(-1))
         root.bind("<Right>", self.get_change_cur_handler(1))
-        root.bind("<Return>", self.get_select_handler(0))
+        root.bind("<space>", self.get_select_handler(0))
 
         if start_path:
             self.path.set(start_path)
@@ -146,30 +94,29 @@ class SelectWindow(object):
         if event.widget == self.root and (event.width != self.oldWidth):
             if self.resize_cb_id:
                 self.root.after_cancel(self.resize_cb_id)
-            self.resize_cb_id = self.root.after(200, self.do_resize, event.width)
+            self.resize_cb_id = self.root.after(200, self.do_resize, event)
 
-    def do_resize(self, width):
+    def do_resize(self, event):
         # print("RESIZE")
-        self.oldWidth = width
+        self.oldWidth = event.width
         self.resize_cb_id = None
         # width = self.root.winfo_width()
-        size_main = width * 5 // 11
-        size_side = width * 3 // 11
-        size_thumbnail = (width - 45) // 9
+        size_main = event.width
+        # size_side = width * 3 // 11
+        size_thumbnail = (event.width - 45) // 9
 
-        ImageControlsGroup.SIZES["MAIN"] = (size_main, size_main * 3 // 4)
-        ImageControlsGroup.SIZES["SIDE"] = (size_side, size_side * 3 // 4)
+        ImageControlsGroup.SIZES["MAIN"] = (event.width, event.height)
+        # ImageControlsGroup.SIZES["SIDE"] = (size_side, size_side * 3 // 4)
 
         SelectImage.THUMBNAIL_SIZE = (size_thumbnail, size_thumbnail * 3 // 4)
         ImageControlsGroup.SIZES["THUMBNAIL"] = SelectImage.THUMBNAIL_SIZE
-
-        self.lblDirectory.configure(wraplength=size_side - 6)
 
         if self.images:
             for img in self.images:
                 img.thumbnail = None
 
         self.reload_view()
+        self.grpPreviews.place(anchor="sw", y=event.height)
 
     def get_change_cur_handler(self, diff):
         def change_cur_handler(_event):
