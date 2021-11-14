@@ -57,7 +57,7 @@ class SelectWindow(object):
         self.mainImage = tk.Label(root)
         self.mainImage.pack(side="top")
 
-        self.imageControls.append(ImageControlsGroup(self, self.mainImage, tk.Label(root), 0, "MAIN", False))
+        self.imageControls.append(ImageControlsGroup(self, self.mainImage, tk.Checkbutton(root), 0, "MAIN", False))
 
         root.bind("<Button-3>", lambda ev: self.menu.tk_popup(ev.x_root, ev.y_root))
 
@@ -66,7 +66,7 @@ class SelectWindow(object):
         grpPreviews.pack(side="bottom")
 
         for idx in range(0, 9):
-            lblPrev = tk.Label(grpPreviews, wraplength=SelectImage.THUMBNAIL_SIZE[0])
+            lblPrev = tk.Checkbutton(grpPreviews, wraplength=SelectImage.THUMBNAIL_SIZE[0])
             lblPrev.grid(column=idx, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
             imgPrev = tk.Label(grpPreviews, image=self.placeholder)
             imgPrev.grid(column=idx, row=1, sticky=tk.N+tk.S+tk.E+tk.W)

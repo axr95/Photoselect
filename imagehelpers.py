@@ -7,61 +7,49 @@ from PIL import ImageTk, Image, ImageOps
 class ImageControlsGroup(object):
     SIZES = {"MAIN": (600, 600), "SIDE": (400, 400), "THUMBNAIL": (128, 128)}
 
-    def __init__(self, base, image_label, name_label, index_offset, size_name, is_thumbnail=False):
+    def __init__(self, base, image_label, name_checkbox, index_offset, size_name, is_thumbnail=False):
         if not SelectImage.PLACEHOLDER_IMAGE:
             SelectImage.PLACEHOLDER_IMAGE = tk.PhotoImage(data=SelectImage.PLACEHOLDER_IMG_BASE64_GIF)
 
         self.base = base
         self.lblImage = image_label
-        self.lblName = name_label
+        self.chkName = name_checkbox
         self.offset = index_offset
         self.sizeName = size_name
         self.isThumbnail = is_thumbnail
 
         self._photoImage = None
         self._image = None
-        self._cbname = None
 
-    def show_selection(self, *_event):
-        if self._image and self._image.selected.get():
-            self.lblName.configure(bg='#00e0ff')
-            #print("SELECT: YES")
-        else:
-            self.lblName.configure(bg='white')
-            #print("SELECT: NO")
 
     def reload_view(self):
         idx = self.base.cur_idx + self.offset
         size = ImageControlsGroup.SIZES[self.sizeName]
         if 0 <= idx < len(self.base.images):
             if self._image != self.base.images[idx]:
-                if self._image and self._cbname:
-                    self._image.selected.trace_remove("write", self._cbname)
                 self._image = self.base.images[idx]
-                self._cbname = self._image.selected.trace_add("write", self.show_selection)
-                self.lblName.configure(text=self._image.name, wraplength=size[0])
+                self.chkName.configure(text=self._image.name, wraplength=size[0],
+                                       variable=self._image.selected, state=tk.ACTIVE)
 
             if self.isThumbnail:
                 if self.base.showPreviews.get() == 1:
                     self._photoImage = self.base.images[idx].get_thumbnail()
             else:
                 self._photoImage = self.base.images[idx].get_image(size=size)
-            self.lblName.configure(text=self.base.images[idx].name)
         else:
-            if self._image and self._cbname:
-                self._image.selected.trace_remove("write", self._cbname)
+            self.chkName.configure(variable=None, state=tk.DISABLED)
+            self.chkName.deselect()
 
             self._photoImage = SelectImage.PLACEHOLDER_IMAGE
             self._image = None
             if idx == -1:
-                self.lblName.configure(text="[Anfang]")
+                self.chkName.configure(text="[Anfang]")
             elif idx == len(self.base.images):
-                self.lblName.configure(text="[Ende]")
+                self.chkName.configure(text="[Ende]")
             else:
-                self.lblName.configure(text="")
+                self.chkName.configure(text="")
 
         self.lblImage.configure(image=self._photoImage, width=size[0], height=size[1])
-        self.show_selection()
 
 
 class SelectImage(object):
