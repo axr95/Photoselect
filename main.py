@@ -14,16 +14,6 @@ from time import time
 
 
 class SelectWindow(object):
-    def create_menu(self):
-        m = tk.Menu(title="Aktionen")
-        m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
-        m.add_separator()
-        m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
-        m.add_separator()
-        m.add_command(label="Auswahl kopieren", command=self.copy_marked)
-        m.add_command(label="Auswahl verschieben", command=self.move_marked)
-        m.add_command(label="Auswahl löschen", command=self.delete_marked)
-        return m
 
     def __init__(self, start_path=None):
         root = tk.Tk()
@@ -43,10 +33,22 @@ class SelectWindow(object):
         self.images = []
         self.cur_idx = 0
 
+        self.showPreviews = tk.BooleanVar()
+
+        m = tk.Menu(title="Aktionen")
+        m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
+        m.add_separator()
+        m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
+        m.add_separator()
+        m.add_command(label="Auswahl kopieren", command=self.copy_marked)
+        m.add_command(label="Auswahl verschieben", command=self.move_marked)
+        m.add_command(label="Auswahl löschen", command=self.delete_marked)
+        m.add_separator()
+        m.add_checkbutton(label="Navigation anzeigen", variable=self.showPreviews, command=self.reload_view)
+        self.menu = m
+
         # max sizes of images
         self.mainSize = 600, 600
-
-        self.menu = self.create_menu()
 
         self.mainImage = tk.Label(root)
         self.mainImage.pack(side="top")
@@ -78,12 +80,15 @@ class SelectWindow(object):
         root.bind("<Right>", self.get_change_cur_handler(1))
         root.bind("<space>", self.get_select_handler(0))
 
+        self.oldWidth = None
+        self.oldHeight = None
+        self.resize_cb_id = None
+
         if start_path:
             self.path.set(start_path)
             self.reload_directory()
-
-        self.oldWidth = None
-        self.resize_cb_id = None
+        else:
+            self.change_directory_handler()
 
         self.root.mainloop()
 
@@ -99,6 +104,7 @@ class SelectWindow(object):
     def do_resize(self, event):
         # print("RESIZE")
         self.oldWidth = event.width
+        self.oldHeight = event.height
         self.resize_cb_id = None
         # width = self.root.winfo_width()
         size_main = event.width
@@ -116,7 +122,6 @@ class SelectWindow(object):
                 img.thumbnail = None
 
         self.reload_view()
-        self.grpPreviews.place(anchor="sw", y=event.height)
 
     def get_change_cur_handler(self, diff):
         def change_cur_handler(_event):
@@ -216,7 +221,7 @@ class SelectWindow(object):
             self.reload_directory()
 
     def change_directory_handler(self):
-        if not self.ask_directory_action():
+        if self.path.get() != '' and not self.ask_directory_action():
             return
         path = askdirectory(parent=self.root, title="Bitte Ordner auswählen", mustexist=True)
         if path:
@@ -242,13 +247,21 @@ class SelectWindow(object):
         self.images = [SelectImage(fpath) for fpath in filepaths if isfile(fpath)]
         self.cur_idx = 0
         print("prepared SelectImages after {0:0.3f}s".format(time() - starttime))
+        self.showPreviews.set(1)
+
         self.reload_view()
+
 
     def reload_view(self):
         starttime = time()
         # assert (0 <= self.cur_idx < len(self.images))
         for group in self.imageControls:
             group.reload_view()
+
+        if self.showPreviews.get() == 1:
+            self.grpPreviews.place(anchor="sw", y=self.oldHeight)
+        else:
+            self.grpPreviews.place_forget()
         print("reloaded view in {0:0.3f}s".format(time() - starttime))
 
 

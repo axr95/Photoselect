@@ -42,7 +42,8 @@ class ImageControlsGroup(object):
                 self.lblName.configure(text=self._image.name, wraplength=size[0])
 
             if self.isThumbnail:
-                self._photoImage = self.base.images[idx].get_thumbnail()
+                if self.base.showPreviews.get() == 1:
+                    self._photoImage = self.base.images[idx].get_thumbnail()
             else:
                 self._photoImage = self.base.images[idx].get_image(size=size)
             self.lblName.configure(text=self.base.images[idx].name)
@@ -101,7 +102,8 @@ class SelectImage(object):
                     im.thumbnail(size)
                 res = ImageTk.PhotoImage(ImageOps.exif_transpose(im))
                 # print("image_get for", self.name)
-
+                self.prepared = res
+                self.preparedSize = size
         except PIL.UnidentifiedImageError:
             res = SelectImage.PLACEHOLDER_IMAGE
 
