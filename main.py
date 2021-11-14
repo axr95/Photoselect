@@ -70,6 +70,10 @@ class SelectWindow(object):
             imgPrev.bind("<Double-Button-1>", self.get_change_cur_handler(idx - 4))
             controlsGroup = ImageControlsGroup(self, imgPrev, lblPrev, idx - 4, "THUMBNAIL", True)
             self.imageControls.append(controlsGroup)
+
+        self.prevScrollbar = tk.Scale(grpPreviews, orient=tk.HORIZONTAL, from_=0, to=1, sliderlength=20,
+                                      showvalue=False, command=self.scrollbar_handler)
+        self.prevScrollbar.grid(column=0, row=2, sticky=tk.S+tk.E+tk.W, columnspan=9)
         self.grpPreviews = grpPreviews
 
         root.state("zoomed")
@@ -130,6 +134,7 @@ class SelectWindow(object):
                 self.cur_idx = 0
             elif self.cur_idx >= len(self.images):
                 self.cur_idx = len(self.images) - 1
+            self.prevScrollbar.set(self.cur_idx)
             self.reload_view()
         return change_cur_handler
 
@@ -140,6 +145,10 @@ class SelectWindow(object):
                 self.images[self.cur_idx + offset].selected.set(new_state)
 
         return select_handler
+
+    def scrollbar_handler(self, _event):
+        self.cur_idx = self.prevScrollbar.get()
+        self.reload_view()
 
     def ask_directory_action(self):
         if self.images:
@@ -248,9 +257,9 @@ class SelectWindow(object):
         self.cur_idx = 0
         print("prepared SelectImages after {0:0.3f}s".format(time() - starttime))
         self.showPreviews.set(1)
+        self.prevScrollbar.config(to=len(self.images)-1)
 
         self.reload_view()
-
 
     def reload_view(self):
         starttime = time()
