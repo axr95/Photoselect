@@ -40,9 +40,13 @@ class SelectWindow(object):
         m.add_separator()
         m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
         m.add_separator()
-        m.add_command(label="Auswahl kopieren", command=self.copy_marked)
-        m.add_command(label="Auswahl verschieben", command=self.move_marked)
-        m.add_command(label="Auswahl löschen", command=self.delete_marked)
+        m.add_command(label="Einzelbild kopieren", command=self.get_cur_action_handler(self.copy_images))
+        m.add_command(label="Einzelbild verschieben", command=self.get_cur_action_handler(self.move_images))
+        m.add_command(label="Einzelbild löschen", command=self.get_cur_action_handler(self.delete_images))
+        m.add_separator()
+        m.add_command(label="Auswahl kopieren", command=self.copy_images)
+        m.add_command(label="Auswahl verschieben", command=self.move_images)
+        m.add_command(label="Auswahl löschen", command=self.delete_images)
         m.add_separator()
         m.add_checkbutton(label="Navigation anzeigen", variable=self.showPreviews, command=self.reload_view)
         self.menu = m
@@ -66,8 +70,8 @@ class SelectWindow(object):
             lblPrev.grid(column=idx, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
             imgPrev = tk.Label(grpPreviews, image=self.placeholder)
             imgPrev.grid(column=idx, row=1, sticky=tk.N+tk.S+tk.E+tk.W)
-            imgPrev.bind("<Button-1>", self.get_select_handler(idx - 4))
-            imgPrev.bind("<Double-Button-1>", self.get_change_cur_handler(idx - 4))
+            imgPrev.bind("<Control-Button-1>", self.get_select_handler(idx - 4))
+            imgPrev.bind("<Button-1>", self.get_change_cur_handler(idx - 4))
             controlsGroup = ImageControlsGroup(self, imgPrev, lblPrev, idx - 4, "THUMBNAIL", True)
             self.imageControls.append(controlsGroup)
 
@@ -146,6 +150,12 @@ class SelectWindow(object):
 
         return select_handler
 
+    def get_cur_action_handler(self, action):
+        def cur_action_handler(_event=None):
+            if self.images:
+                action(img=[self.images[self.cur_idx]])
+        return cur_action_handler
+
     def scrollbar_handler(self, _event):
         self.cur_idx = self.prevScrollbar.get()
         self.reload_view()
@@ -158,19 +168,29 @@ class SelectWindow(object):
                 return False
         return True
 
-    def ask_confirmation(self, title: str, text: str):
-        if self.images:
-            img = [x for x in self.images if x.selected.get()]
-            if any(img):
-                d = ListDialog(self.root, title, text, [i.name for i in img])
-                if d.result:
-                    return img
+    def ask_confirmation(self, title: str, text: str, images: list = None) -> bool:
+        """
+        Asks the user to confirm an action on the given SelectImages
+        :param title: The title of the dialog
+        :param text:  The message text of the dialog
+        :param images: The images that should be listed. If None (default), all currently selected images are taken.
+        :return: True, if the user confirmed the dialog, False otherwise
+        """
+        if not images:
+            if not self.images:
+                return False
+            else:
+                images = [x for x in self.images if x.selected.get()]
+        if any(images):
+            d = ListDialog(self.root, title, text, [i.name for i in images])
+            if d.result:
+                return True
         return False
 
-    def delete_marked(self):
-        img = self.ask_confirmation("Dateien löschen?",
-                                    "Alle folgenden Elemente werden unwiderruflich gelöscht. Fortfahren?")
-        if not img:
+    def delete_images(self, img=None):
+        confirmed = self.ask_confirmation("Dateien löschen?",
+                                          "Alle folgenden Elemente werden unwiderruflich gelöscht. Fortfahren?", img)
+        if not confirmed:
             return
         results = []
         for i in img:
@@ -189,14 +209,14 @@ class SelectWindow(object):
 
         self.reload_directory()
 
-    def copy_marked(self):
-        self.move_marked(True)
+    def copy_images(self, img=None):
+        self.move_images(True, img)
 
-    def move_marked(self, copy=False):
+    def move_images(self, copy=False, img=None):
         action_name = "kopiert" if copy else "verschoben"
-        img = self.ask_confirmation("Dateien {0}?".format("kopieren" if copy else "verschieben"),
-                                    "Alle folgenden Elemente werden {0}. Fortfahren?".format(action_name))
-        if not img:
+        confirmed = self.ask_confirmation("Dateien {0}?".format("kopieren" if copy else "verschieben"),
+                                          "Alle folgenden Elemente werden {0}. Fortfahren?".format(action_name), img)
+        if not confirmed:
             return
 
         destination = askdirectory(parent=self.root, title="Bitte Zielordner auswählen")
