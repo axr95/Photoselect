@@ -13,7 +13,7 @@ from os.path import join, isfile
 import shutil
 
 
-FORMAT_PATTERN = re.compile("{(.+?)}")
+FORMAT_PATTERN = re.compile("<(.+?)>")
 
 
 class RenameDialog(Dialog):
@@ -39,7 +39,7 @@ class RenameDialog(Dialog):
         self.statusLabel = None
 
         self.formatVariable = tk.StringVar()
-        self.formatVariable.set("{DateTimeOriginal}_{OriginalName}{Ext}")
+        self.formatVariable.set("<DateTimeOriginal>_<OriginalName><Ext>")
         self.dateFormatVar = tk.StringVar()
         self.dateFormatVar.set("%Y%m%d_%H%M%S")
         Dialog.__init__(self, parent, "Dateien umbenennen")
@@ -48,9 +48,9 @@ class RenameDialog(Dialog):
         grpSettings = tk.Frame(master)
         grpSettings.grid_configure(rows=2, columns=3)
         tk.Label(grpSettings, text="Dateiname:").grid(column=0, row=0)
-        tk.Entry(grpSettings, textvariable=self.formatVariable, width=50).grid(column=1, row=0)
+        tk.Entry(grpSettings, textvariable=self.formatVariable, width=60).grid(column=1, row=0)
         tk.Label(grpSettings, text="Datumsformat:").grid(column=0, row=1)
-        tk.Entry(grpSettings, textvariable=self.dateFormatVar, width=50).grid(column=1, row=1)
+        tk.Entry(grpSettings, textvariable=self.dateFormatVar, width=60).grid(column=1, row=1)
         tk.Button(grpSettings, text="Vorschau", command=self.update_preview).grid(column=2, row=0, rowspan=2)
 
         grpSettings.pack(side=tk.TOP, fill=tk.X)
@@ -75,14 +75,17 @@ class RenameDialog(Dialog):
         self.computedNames = {}
 
         self.listBox.delete(0, tk.END)
+        existing_files = set(map(str.lower, os.listdir(self.path)))
 
         for f in self.files:
+            local_error = False
+
             def repl(matchobj):
-                nonlocal error, date_format
+                nonlocal local_error, date_format
                 prop = matchobj.group(1)
                 val = self.files[f].get(prop, None)
                 if not val:
-                    error = True
+                    local_error = True
                     return "ERROR"
                 else:
                     try:
@@ -91,8 +94,17 @@ class RenameDialog(Dialog):
                     except ValueError:
                         return val
 
-            self.computedNames[f] = FORMAT_PATTERN.sub(repl, self.formatVariable.get())
-            self.listBox.insert(tk.END, self.computedNames[f])
+            computed_name = FORMAT_PATTERN.sub(repl, self.formatVariable.get())
+            self.listBox.insert(tk.END, computed_name)
+            if local_error:
+                error = True
+                self.listBox.itemconfig(tk.END, foreground="red")
+            elif computed_name.lower() in existing_files:
+                error = True
+                self.listBox.itemconfig(tk.END, foreground="orange")
+
+            self.computedNames[f] = computed_name
+            existing_files.add(computed_name.lower())
 
         if error:
             self.computedNames = None
