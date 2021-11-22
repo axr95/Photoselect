@@ -9,6 +9,7 @@ import shutil
 
 from imagehelpers import SelectImage, ImageControlsGroup
 from listdialog import ListDialog
+from rename import RenameDialog
 from file_action_util import perform_action
 
 from time import time
@@ -39,6 +40,7 @@ class SelectWindow(object):
 
         m = tk.Menu(title="Aktionen")
         m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
+        m.add_command(label="Alle Dateien umbenennen ...", command=self.rename_handler)
         m.add_separator()
         m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
         m.add_separator()
@@ -267,6 +269,13 @@ class SelectWindow(object):
         if path:
             self.path.set(path)
             self.reload_directory()
+
+    def rename_handler(self):
+        """Opens the renaming dialog"""
+        if self.path.get() == '':
+            showerror("Fehler", "Bitte zuerst ein Verzeichnis auswählen!")
+        else:
+            RenameDialog(self.root, self.path.get())
 
     def mark_all_handler(self):
         """Marks all the images as selected. If all images are already selected, unselects them."""
