@@ -65,23 +65,23 @@ class SelectWindow(object):
         root.bind("<Button-3>", lambda ev: self.menu.tk_popup(ev.x_root, ev.y_root))
 
         # Preview (Thumbnails)
-        grpPreviews = tk.Frame(root)
-        grpPreviews.pack(side="bottom")
+        grp_previews = tk.Frame(root)
+        grp_previews.pack(side="bottom")
 
         for idx in range(0, 9):
-            lblPrev = tk.Checkbutton(grpPreviews, wraplength=SelectImage.THUMBNAIL_SIZE[0])
-            lblPrev.grid(column=idx, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
-            imgPrev = tk.Label(grpPreviews, image=self.placeholder)
-            imgPrev.grid(column=idx, row=1, sticky=tk.N+tk.S+tk.E+tk.W)
-            imgPrev.bind("<Control-Button-1>", self.get_select_handler(idx - 4))
-            imgPrev.bind("<Button-1>", self.get_change_cur_handler(idx - 4))
-            controlsGroup = ImageControlsGroup(self, imgPrev, lblPrev, idx - 4, "THUMBNAIL", True)
-            self.imageControls.append(controlsGroup)
+            lbl_prev = tk.Checkbutton(grp_previews, wraplength=SelectImage.THUMBNAIL_SIZE[0])
+            lbl_prev.grid(column=idx, row=0, sticky=tk.N+tk.S+tk.E+tk.W)
+            img_prev = tk.Label(grp_previews, image=self.placeholder)
+            img_prev.grid(column=idx, row=1, sticky=tk.N+tk.S+tk.E+tk.W)
+            img_prev.bind("<Control-Button-1>", self.get_select_handler(idx - 4))
+            img_prev.bind("<Button-1>", self.get_change_cur_handler(idx - 4))
+            controls_group = ImageControlsGroup(self, img_prev, lbl_prev, idx - 4, "THUMBNAIL", True)
+            self.imageControls.append(controls_group)
 
-        self.prevScrollbar = tk.Scale(grpPreviews, orient=tk.HORIZONTAL, from_=0, to=1, sliderlength=20,
+        self.prevScrollbar = tk.Scale(grp_previews, orient=tk.HORIZONTAL, from_=0, to=1, sliderlength=20,
                                       showvalue=False, command=self.scrollbar_handler)
         self.prevScrollbar.grid(column=0, row=2, sticky=tk.S+tk.E+tk.W, columnspan=9)
-        self.grpPreviews = grpPreviews
+        self.grpPreviews = grp_previews
 
         root.state("zoomed")
 
@@ -120,13 +120,9 @@ class SelectWindow(object):
         self.oldWidth = event.width
         self.oldHeight = event.height
         self.resize_cb_id = None
-        # width = self.root.winfo_width()
-        size_main = event.width
-        # size_side = width * 3 // 11
         size_thumbnail = (event.width - 45) // 9
 
         ImageControlsGroup.SIZES["MAIN"] = (event.width, event.height)
-        # ImageControlsGroup.SIZES["SIDE"] = (size_side, size_side * 3 // 4)
 
         SelectImage.THUMBNAIL_SIZE = (size_thumbnail, size_thumbnail * 3 // 4)
         ImageControlsGroup.SIZES["THUMBNAIL"] = SelectImage.THUMBNAIL_SIZE
