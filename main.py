@@ -1,6 +1,24 @@
+LICENSE = """Photoselect, an application to review images in a folder, including a mass-renaming functionality
+Copyright (C) 2021  Alexander Simunics
+
+This program is free software: you can redistribute it and/or modify \
+it under the terms of the GNU General Public License as published by \
+the Free Software Foundation, either version 3 of the License, or \
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, \
+but WITHOUT ANY WARRANTY; without even the implied warranty of \
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the \
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License \
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+The author of the icon file "icon.ico" is Xiran Dong, (C) 2020."""
+
 import tkinter as tk
 from tkinter.filedialog import askdirectory
-from tkinter.messagebox import showerror, askyesno
+from tkinter.messagebox import showerror, askyesno, showinfo
 
 import sys
 import os
@@ -40,6 +58,7 @@ class SelectWindow(object):
         m = tk.Menu(title="Aktionen")
         m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
         m.add_command(label="Alle Dateien umbenennen ...", command=self.rename_handler)
+        m.add_checkbutton(label="Navigation anzeigen", variable=self.showThumbnails, command=self.reload_view)
         m.add_separator()
         m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
         m.add_separator()
@@ -51,7 +70,7 @@ class SelectWindow(object):
         m.add_command(label="Auswahl verschieben", command=self.move_images)
         m.add_command(label="Auswahl löschen", command=self.delete_images)
         m.add_separator()
-        m.add_checkbutton(label="Navigation anzeigen", variable=self.showThumbnails, command=self.reload_view)
+        m.add_command(label="Über ...", command=self.show_about)
         self.menu = m
 
         # max sizes of images
@@ -310,6 +329,9 @@ class SelectWindow(object):
         else:
             self.grpPreviews.place_forget()
         print("reloaded view in {0:0.3f}s".format(time() - starttime))
+
+    def show_about(self):
+        showinfo("About", LICENSE)
 
 
 def main():
