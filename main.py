@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter.filedialog import askdirectory
-from tkinter.messagebox import showerror, showinfo, askyesno
+from tkinter.messagebox import showerror, askyesno
 
 import sys
 import os
@@ -8,9 +8,8 @@ from os.path import join, isfile
 import shutil
 
 from imagehelpers import SelectImage, ImageControlsGroup
-from listdialog import ListDialog
 from rename import RenameDialog
-from file_action_util import perform_action
+from file_action_util import perform_action, ListDialog
 
 from time import time
 
