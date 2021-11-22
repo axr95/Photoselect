@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter.simpledialog import Dialog
+from tkinter.messagebox import showerror
 
 import PIL
 from PIL import Image, ExifTags
@@ -10,7 +11,8 @@ import re
 import sys
 import os
 from os.path import join, isfile
-import shutil
+
+from file_action_util import perform_action
 
 
 FORMAT_PATTERN = re.compile("<(.+?)>")
@@ -73,9 +75,13 @@ class RenameDialog(Dialog):
 
         return self.listBox
 
+    def rename_file(self, filename) -> None:
+        """Renames a single file according to the new name in the currently shown preview."""
+        os.rename(join(self.path, filename), join(self.path, self.computedNames[filename]))
+
     def apply(self):
         """Executes the renaming. Overrides method from Dialog, is called when user clicks "OK"."""
-        # TODO: do actual renaming
+        perform_action(self.rename_file, self.files.keys(), "umbenannt")
         self.result = True
 
     def update_preview(self):
@@ -147,7 +153,11 @@ def main():
         start_path = sys.argv[1]
         root = tk.Tk()
         root.withdraw()
-        RenameDialog(root, start_path)
+        try:
+            RenameDialog(root, start_path)
+        except Exception as e:
+            showerror("Fehler", "Ein Fehler ist aufgetreten:\n" + str(e))
+            exit(1)
     else:
         print("Usage:", sys.argv[0], "<path>")
 

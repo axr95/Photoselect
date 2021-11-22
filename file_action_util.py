@@ -2,7 +2,7 @@ from tkinter.messagebox import showinfo
 import shutil
 
 
-def perform_action(action, objects: list, past_tense: str = "verarbeitet", name_func=str):
+def perform_action(action, objects, past_tense: str = "verarbeitet", name_func=str):
     """
     Performs an action on a list, and afterwards displays a summary of possible errors
     :param action: A function that takes the objects as single input
