@@ -14,6 +14,7 @@ from time import time
 
 
 class SelectWindow(object):
+    """The main Window where a user can view, select, and perform actions on images in a directory."""
 
     def __init__(self, start_path=None):
         root = tk.Tk()
@@ -33,7 +34,7 @@ class SelectWindow(object):
         self.images = []
         self.cur_idx = 0
 
-        self.showPreviews = tk.BooleanVar()
+        self.showThumbnails = tk.BooleanVar()
 
         m = tk.Menu(title="Aktionen")
         m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
@@ -48,7 +49,7 @@ class SelectWindow(object):
         m.add_command(label="Auswahl verschieben", command=self.move_images)
         m.add_command(label="Auswahl löschen", command=self.delete_images)
         m.add_separator()
-        m.add_checkbutton(label="Navigation anzeigen", variable=self.showPreviews, command=self.reload_view)
+        m.add_checkbutton(label="Navigation anzeigen", variable=self.showThumbnails, command=self.reload_view)
         self.menu = m
 
         # max sizes of images
@@ -101,15 +102,18 @@ class SelectWindow(object):
         self.root.mainloop()
 
     def title_handler(self, *_event):
+        """Sets the title of the window to the current path"""
         self.root.title(self.path.get())
 
     def resize_handler(self, event):
+        """(Re-)Schedules a resize to be done in 200ms, to provide smoother experience during resizing"""
         if event.widget == self.root and (event.width != self.oldWidth):
             if self.resize_cb_id:
                 self.root.after_cancel(self.resize_cb_id)
             self.resize_cb_id = self.root.after(200, self.do_resize, event)
 
     def do_resize(self, event):
+        """Recomputes the needed sizes of all images for new windows size and triggers a refresh"""
         # print("RESIZE")
         self.oldWidth = event.width
         self.oldHeight = event.height
@@ -132,6 +136,11 @@ class SelectWindow(object):
         self.reload_view()
 
     def get_change_cur_handler(self, diff):
+        """
+        Creates a handler-function that shifts the current view by a given amount, when called, and returns it.
+        :param diff: The offset the handler should be adding to the currently selected index.
+        :return: The handler-function that was created, which sets the selected index and reloads the view
+        """
         def change_cur_handler(_event):
             self.cur_idx += diff
             if self.cur_idx < 0:
@@ -143,6 +152,11 @@ class SelectWindow(object):
         return change_cur_handler
 
     def get_select_handler(self, offset):
+        """
+        Creates a handler-function that toggles the "selected"-state of the image with the given offset.
+        :param offset: The offset of the image to be toggled, with respect to the currently centered image.
+        :return: The handler-function that was created, which toggles the correct selected-state.
+        """
         def select_handler(_event):
             if 0 <= self.cur_idx + offset < len(self.images):
                 new_state = 1 - self.images[self.cur_idx + offset].selected.get()
@@ -151,16 +165,26 @@ class SelectWindow(object):
         return select_handler
 
     def get_cur_action_handler(self, action):
+        """
+        Creates a handler that applies the given action to the currently centered SelectImage
+        :param action: A function that takes a keyword argument "img" of type SelectImage
+        :return: The created handler.
+        """
         def cur_action_handler(_event=None):
             if self.images:
                 action(img=[self.images[self.cur_idx]])
         return cur_action_handler
 
     def scrollbar_handler(self, _event):
+        """Shifts the view according to the scrollbar"""
         self.cur_idx = self.prevScrollbar.get()
         self.reload_view()
 
-    def ask_directory_action(self):
+    def ask_directory_action(self) -> bool:
+        """
+        Asks the user whether the directory can be changed
+        :return: The answer of the user (True or False)
+        """
         if self.images:
             res = askyesno("Verzeichnis ändern",
                            "Neues Verzeichnis laden? Alle aktuellen Markierungen gehen verloren (falls vorhanden)!")
@@ -187,7 +211,11 @@ class SelectWindow(object):
                 return True
         return False
 
-    def delete_images(self, img=None):
+    def delete_images(self, img=None) -> None:
+        """
+        Deletes the given images after confirmation by the user.
+        :param img: A list of SelectImages to be deleted. If None, all selected images are taken.
+        """
         confirmed = self.ask_confirmation("Dateien löschen?",
                                           "Alle folgenden Elemente werden unwiderruflich gelöscht. Fortfahren?", img)
         if not confirmed:
@@ -210,9 +238,18 @@ class SelectWindow(object):
         self.reload_directory()
 
     def copy_images(self, img=None):
+        """
+        Copies the given images after confirmation by the user, and a destination selection.
+        :param img: A list of SelectImages to be copied. If None, all selected images are taken.
+        """
         self.move_images(True, img)
 
     def move_images(self, copy=False, img=None):
+        """
+        Moves or copies the given images after confirmation by the user, and a destination selection.
+        :param copy: If copy evaluates to True, the images also remain in the original location.
+        :param img: A list of SelectImages to be moved/copied. If None, all selected images are taken.
+        """
         action_name = "kopiert" if copy else "verschoben"
         confirmed = self.ask_confirmation("Dateien {0}?".format("kopieren" if copy else "verschieben"),
                                           "Alle folgenden Elemente werden {0}. Fortfahren?".format(action_name), img)
@@ -250,6 +287,7 @@ class SelectWindow(object):
             self.reload_directory()
 
     def change_directory_handler(self):
+        """Changes the current directory, after asking the user for confirmation (iff a directory is already open)"""
         if self.path.get() != '' and not self.ask_directory_action():
             return
         path = askdirectory(parent=self.root, title="Bitte Ordner auswählen", mustexist=True)
@@ -258,6 +296,7 @@ class SelectWindow(object):
             self.reload_directory()
 
     def mark_all_handler(self):
+        """Marks all the images as selected. If all images are already selected, unselects them."""
         if self.images:
             if all(map(lambda x: x.selected.get(), self.images)):
                 for img in self.images:
@@ -267,6 +306,7 @@ class SelectWindow(object):
                     img.selected.set(1)
 
     def reload_directory(self):
+        """(Re-)loads the directory of the current path."""
         starttime = time()
         p = self.path.get()
         filepaths = [join(p, f) for f in os.listdir(p)]
@@ -276,18 +316,19 @@ class SelectWindow(object):
         self.images = [SelectImage(fpath) for fpath in filepaths if isfile(fpath)]
         self.cur_idx = 0
         print("prepared SelectImages after {0:0.3f}s".format(time() - starttime))
-        self.showPreviews.set(1)
+        self.showThumbnails.set(1)
         self.prevScrollbar.config(to=len(self.images)-1)
 
         self.reload_view()
 
     def reload_view(self):
+        """Reloads the current view (including refreshing all images, accounting for new sizes and changed index)"""
         starttime = time()
         # assert (0 <= self.cur_idx < len(self.images))
         for group in self.imageControls:
             group.reload_view()
 
-        if self.showPreviews.get() == 1:
+        if self.showThumbnails.get() == 1:
             self.grpPreviews.place(anchor="sw", y=self.oldHeight)
         else:
             self.grpPreviews.place_forget()
@@ -295,6 +336,7 @@ class SelectWindow(object):
 
 
 def main():
+    """Main entry point of the application."""
     start_path = None
     if len(sys.argv) > 1:
         start_path = sys.argv[1]

@@ -17,7 +17,13 @@ FORMAT_PATTERN = re.compile("<(.+?)>")
 
 
 class RenameDialog(Dialog):
+    """A dialog that lets the user enter a filename format, and renames the given files based on their exif tags"""
+
     def __init__(self, parent, path):
+        """
+        :param parent: The tkinter parent of this dialog
+        :param path: The path of the directory where the files should be renamed
+        """
         self.files = {}
         self.computedNames = None
         self.path = path
@@ -45,6 +51,7 @@ class RenameDialog(Dialog):
         Dialog.__init__(self, parent, "Dateien umbenennen")
 
     def body(self, master):
+        """Creates dialog body. Overrides method from Dialog"""
         grpSettings = tk.Frame(master)
         grpSettings.grid_configure(rows=2, columns=3)
         tk.Label(grpSettings, text="Dateiname:").grid(column=0, row=0)
@@ -67,9 +74,12 @@ class RenameDialog(Dialog):
         return self.listBox
 
     def apply(self):
+        """Executes the renaming. Overrides method from Dialog, is called when user clicks "OK"."""
+        # TODO: do actual renaming
         self.result = True
 
     def update_preview(self):
+        """Updates the listbox with the new names according to the entered filename format"""
         error = False
         date_format = self.dateFormatVar.get()
         self.computedNames = {}
@@ -132,6 +142,7 @@ class RenameDialog(Dialog):
 
 
 def main():
+    """Opens the renaming dialog on its own, taking the path from the first argument given to the program."""
     if len(sys.argv) > 1:
         start_path = sys.argv[1]
         root = tk.Tk()
