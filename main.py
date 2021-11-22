@@ -9,6 +9,7 @@ import shutil
 
 from imagehelpers import SelectImage, ImageControlsGroup
 from listdialog import ListDialog
+from file_action_util import perform_action
 
 from time import time
 
@@ -192,50 +193,35 @@ class SelectWindow(object):
                 return False
         return True
 
-    def ask_confirmation(self, title: str, text: str, images: list = None) -> bool:
+    def ask_confirmation(self, title: str, text: str, images: list = None) -> list:
         """
         Asks the user to confirm an action on the given SelectImages
         :param title: The title of the dialog
         :param text:  The message text of the dialog
         :param images: The images that should be listed. If None (default), all currently selected images are taken.
-        :return: True, if the user confirmed the dialog, False otherwise
+        :return: The images to be processed, if the user confirmed the dialog. Otherwise an empty list.
         """
         if not images:
             if not self.images:
-                return False
+                return []
             else:
                 images = [x for x in self.images if x.selected.get()]
         if any(images):
             d = ListDialog(self.root, title, text, [i.name for i in images])
             if d.result:
-                return True
-        return False
+                return images
+        return []
 
     def delete_images(self, img=None) -> None:
         """
         Deletes the given images after confirmation by the user.
         :param img: A list of SelectImages to be deleted. If None, all selected images are taken.
         """
-        confirmed = self.ask_confirmation("Dateien löschen?",
-                                          "Alle folgenden Elemente werden unwiderruflich gelöscht. Fortfahren?", img)
-        if not confirmed:
-            return
-        results = []
-        for i in img:
-            try:
-                os.remove(i.path)
-            except OSError as e:
-                results.append("[ERROR] {}: {}".format(i.name, str(e)))
-        if results:
-            ok_count = len(img) - len(results)
-            showinfo("Löschen abgeschlossen",
-                     ("{0} von {1} Dateien wurden erfolgreich gelöscht." +
-                      "\nEs gab Probleme bei den folgenden Dateien:\n\n{2}")
-                     .format(ok_count, len(img), "\n".join(results)))
-        else:
-            showinfo("Löschen abgeschlossen", "Alle {0} Dateien wurden erfolgreich gelöscht.".format(len(img)))
-
-        self.reload_directory()
+        img = self.ask_confirmation("Dateien löschen?",
+                                    "Alle folgenden Elemente werden unwiderruflich gelöscht. Fortfahren?", img)
+        if img:
+            perform_action(lambda x: os.remove(x.path), img, "gelöscht")
+            self.reload_directory()
 
     def copy_images(self, img=None):
         """
@@ -251,9 +237,9 @@ class SelectWindow(object):
         :param img: A list of SelectImages to be moved/copied. If None, all selected images are taken.
         """
         action_name = "kopiert" if copy else "verschoben"
-        confirmed = self.ask_confirmation("Dateien {0}?".format("kopieren" if copy else "verschieben"),
-                                          "Alle folgenden Elemente werden {0}. Fortfahren?".format(action_name), img)
-        if not confirmed:
+        img = self.ask_confirmation("Dateien {0}?".format("kopieren" if copy else "verschieben"),
+                                    "Alle folgenden Elemente werden {0}. Fortfahren?".format(action_name), img)
+        if not img:
             return
 
         destination = askdirectory(parent=self.root, title="Bitte Zielordner auswählen")
@@ -267,23 +253,10 @@ class SelectWindow(object):
                 showerror("Konnte den Zielordner nicht erstellen:\n" + str(e))
                 return
 
-        action = shutil.copy2 if copy else shutil.move
-        results = []
-        for i in img:
-            try:
-                action(i.path, destination)
-            except Exception as e:
-                results.append("[ERROR] {}: {}".format(i.name, str(e)))
-
-        if results:  # if errors were logged
-            ok_count = len(img) - len(results)
-            showinfo("Vorgang abgeschlossen",
-                     "{0} von {1} Dateien wurden erfolgreich {2}.\nEs gab Probleme bei den folgenden Dateien:\n\n{3}"
-                     .format(ok_count, len(img), action_name, "\n".join(results)))
+        if copy:
+            perform_action(lambda x: shutil.copy2(x.path, destination), img, "kopiert")
         else:
-            showinfo("Vorgang abgeschlossen", "Alle {0} Dateien wurden erfolgreich {1}.".format(len(img), action_name))
-
-        if not copy:
+            perform_action(lambda x: shutil.move(x.path, destination), img, "verschoben")
             self.reload_directory()
 
     def change_directory_handler(self):

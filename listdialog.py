@@ -23,9 +23,9 @@ class ListDialog(Dialog):
         scrollbar = tk.Scrollbar(master)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        listbox = tk.Listbox(master, yscrollcommand=scrollbar.set)
+        listbox = tk.Listbox(master, yscrollcommand=scrollbar.set, width=50)
         listbox.insert(tk.END, *self.listContent)
-        listbox.pack(side=tk.LEFT, fill=tk.BOTH)
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         scrollbar.config(command=listbox.yview)
 
