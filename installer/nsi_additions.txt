@@ -1,0 +1,28 @@
+
+[Install]
+  ; Add to Directory Background Context menu
+  StrCmp $MultiUser.InstallMode CurrentUser 0 +7
+    WriteRegStr HKCU "Software\Classes\Directory\shell" "" "Fotos aussortieren"
+    WriteRegStr HKCU "Software\Classes\Directory\shell" "Icon" "$INSTDIR\${PRODUCT_ICON}"
+    WriteRegStr HKCU "Software\Classes\Directory\Background\shell" "" "Fotos aussortieren"
+    WriteRegStr HKCU "Software\Classes\Directory\Background\shell" "Icon" "$INSTDIR\${PRODUCT_ICON}"
+    WriteRegStr HKCU "Software\Classes\Directory\shell\command" "" '$INSTDIR\Python\pythonw.exe "$INSTDIR\Photoselect.launch.pyw" %1'
+    WriteRegStr HKCU "Software\Classes\Directory\Background\shell\command" "" '$INSTDIR\Python\pythonw.exe "$INSTDIR\Photoselect.launch.pyw" %1'
+    Goto contextmenudone
+    WriteRegStr HKCR "Directory\shell" "" "Fotos aussortieren"
+    WriteRegStr HKCR "Directory\Background\shell" "" "Fotos aussortieren"
+    WriteRegStr HKCR "Directory\shell\command" "" '$INSTDIR\Python\pythonw.exe "$INSTDIR\Photoselect.launch.pyw" %1'
+    WriteRegStr HKCR "Directory\Background\shell\command" "" '$INSTDIR\Python\pythonw.exe "$INSTDIR\Photoselect.launch.pyw" %1'
+  contextmenudone:
+ 
+
+[Uninstall]
+ IfFileExists "$INSTDIR\${USER_INSTALL_MARKER}" 0 +5
+    DeleteRegKey HKCU "Software\Classes\Directory\shell"
+    DeleteRegKey HKCU "Software\Classes\Directory\Background\shell"
+    SetShellVarContext current
+    Delete "$INSTDIR\${USER_INSTALL_MARKER}"
+    Goto explorerregkeysdone
+    DeleteRegKey HKCR "Directory\shell"
+    DeleteRegKey HKCR "Directory\Background\shell"
+  explorerregkeysdone:
