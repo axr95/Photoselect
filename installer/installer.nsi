@@ -1,10 +1,10 @@
 !define PRODUCT_NAME "Photoselect"
-!define PRODUCT_VERSION "1.0"
+!define PRODUCT_VERSION "1.1"
 !define PY_VERSION "3.8.5"
 !define PY_MAJOR_VERSION "3.8"
 !define BITNESS "64"
 !define ARCH_TAG ".amd64"
-!define INSTALLER_NAME "Photoselect_1.0.exe"
+!define INSTALLER_NAME "Photoselect_1.1.exe"
 !define PRODUCT_ICON "icon.ico"
 
 ; Marker file to tell the uninstaller that it's a user installation
@@ -35,6 +35,7 @@ SetCompressor lzma
 ; UI pages
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MULTIUSER_PAGE_INSTALLMODE
+!insertmacro MUI_PAGE_LICENSE "LICENSE"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -68,8 +69,11 @@ Section "!${PRODUCT_NAME}" sec_app
 
   ; Install files
     SetOutPath "$INSTDIR"
-      File "icon.ico"
       File "Photoselect.launch.pyw"
+      File "icon.ico"
+      File "Photoselect_Rename.launch.pyw"
+      File "LICENSE"
+      File "README.md"
 
   ; Install directories
     SetOutPath "$INSTDIR\Python"
@@ -80,7 +84,8 @@ Section "!${PRODUCT_NAME}" sec_app
   ; Install shortcuts
   ; The output path becomes the working directory for shortcuts
   SetOutPath "%HOMEDRIVE%\%HOMEPATH%"
-    CreateShortCut "$SMPROGRAMS\Photoselect.lnk" "$INSTDIR\Python\pythonw.exe" \
+    CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
+    CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Photoselect.lnk" "$INSTDIR\Python\pythonw.exe" \
       '"$INSTDIR\Photoselect.launch.pyw"' "$INSTDIR\icon.ico"
   SetOutPath "$INSTDIR"
 
@@ -106,15 +111,21 @@ Section "!${PRODUCT_NAME}" sec_app
                    "NoModify" 1
   WriteRegDWORD SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}" \
                    "NoRepair" 1
-                   
+                    
   ; Add to Directory Background Context menu
-  StrCmp $MultiUser.InstallMode CurrentUser 0 +8
+  StrCmp $MultiUser.InstallMode CurrentUser 0 +14
     WriteRegStr HKCU "Software\Classes\Directory\shell\${PRODUCT_NAME}" "" "Fotos aussortieren"
     WriteRegStr HKCU "Software\Classes\Directory\shell\${PRODUCT_NAME}" "Icon" "$INSTDIR\${PRODUCT_ICON}"
     WriteRegStr HKCU "Software\Classes\Directory\Background\shell\${PRODUCT_NAME}" "" "Fotos aussortieren"
     WriteRegStr HKCU "Software\Classes\Directory\Background\shell\${PRODUCT_NAME}" "Icon" "$INSTDIR\${PRODUCT_ICON}"
     WriteRegStr HKCU "Software\Classes\Directory\shell\${PRODUCT_NAME}\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect.launch.pyw" "%1"'
     WriteRegStr HKCU "Software\Classes\Directory\Background\shell\${PRODUCT_NAME}\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect.launch.pyw" "%v"'
+    WriteRegStr HKCU "Software\Classes\Directory\shell\${PRODUCT_NAME}_Rename" "" "Fotos umbenennen"
+    WriteRegStr HKCU "Software\Classes\Directory\shell\${PRODUCT_NAME}_Rename" "Icon" "$INSTDIR\${PRODUCT_ICON}"
+    WriteRegStr HKCU "Software\Classes\Directory\Background\shell\${PRODUCT_NAME}_Rename" "" "Fotos umbenennen"
+    WriteRegStr HKCU "Software\Classes\Directory\Background\shell\${PRODUCT_NAME}_Rename" "Icon" "$INSTDIR\${PRODUCT_ICON}"
+    WriteRegStr HKCU "Software\Classes\Directory\shell\${PRODUCT_NAME}_Rename\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect_Rename.launch.pyw" "%1"'
+    WriteRegStr HKCU "Software\Classes\Directory\Background\shell\${PRODUCT_NAME}_Rename\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect_Rename.launch.pyw" "%v"'
     Goto contextmenudone
     WriteRegStr HKCR "Directory\shell\${PRODUCT_NAME}" "" "Fotos aussortieren"
     WriteRegStr HKCR "Directory\shell\${PRODUCT_NAME}" "Icon" "$INSTDIR\${PRODUCT_ICON}"
@@ -122,6 +133,12 @@ Section "!${PRODUCT_NAME}" sec_app
     WriteRegStr HKCR "Directory\Background\shell\${PRODUCT_NAME}" "Icon" "$INSTDIR\${PRODUCT_ICON}"
     WriteRegStr HKCR "Directory\shell\${PRODUCT_NAME}\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect.launch.pyw" "%1"'
     WriteRegStr HKCR "Directory\Background\shell\${PRODUCT_NAME}\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect.launch.pyw" "%v"'
+    WriteRegStr HKCR "Directory\shell\${PRODUCT_NAME}_Rename" "" "Fotos umbenennen"
+    WriteRegStr HKCR "Directory\shell\${PRODUCT_NAME}_Rename" "Icon" "$INSTDIR\${PRODUCT_ICON}"
+    WriteRegStr HKCR "Directory\Background\shell\${PRODUCT_NAME}_Rename" "" "Fotos umbenennen"
+    WriteRegStr HKCR "Directory\Background\shell\${PRODUCT_NAME}_Rename" "Icon" "$INSTDIR\${PRODUCT_ICON}"
+    WriteRegStr HKCR "Directory\shell\${PRODUCT_NAME}_Rename\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect_Rename.launch.pyw" "%1"'
+    WriteRegStr HKCR "Directory\Background\shell\${PRODUCT_NAME}_Rename\command" "" '"$INSTDIR\Python\pythonw.exe" "$INSTDIR\Photoselect_Rename.launch.pyw" "%v"'
   contextmenudone:
   
 
@@ -136,14 +153,18 @@ SectionEnd
 Section "Uninstall"
   SetRegView 64
   SetShellVarContext all
-  IfFileExists "$INSTDIR\${USER_INSTALL_MARKER}" 0 +6
+  IfFileExists "$INSTDIR\${USER_INSTALL_MARKER}" 0 +8
     DeleteRegKey HKCU "Software\Classes\Directory\shell\Photoselect"
     DeleteRegKey HKCU "Software\Classes\Directory\Background\shell\Photoselect"
+    DeleteRegKey HKCU "Software\Classes\Directory\shell\Photoselect_Rename"
+    DeleteRegKey HKCU "Software\Classes\Directory\Background\shell\Photoselect_Rename"
     SetShellVarContext current
     Delete "$INSTDIR\${USER_INSTALL_MARKER}"
     Goto explorerregkeysdone
     DeleteRegKey HKCR "Directory\shell\Photoselect"
     DeleteRegKey HKCR "Directory\Background\shell\Photoselect"
+    DeleteRegKey HKCR "Directory\shell\Photoselect_Rename"
+    DeleteRegKey HKCR "Directory\Background\shell\Photoselect_Rename"
   explorerregkeysdone:
 
   Delete $INSTDIR\uninstall.exe
@@ -153,14 +174,17 @@ Section "Uninstall"
   ; Remove ourselves from %PATH%
 
   ; Uninstall files
-    Delete "$INSTDIR\icon.ico"
     Delete "$INSTDIR\Photoselect.launch.pyw"
+    Delete "$INSTDIR\icon.ico"
+    Delete "$INSTDIR\Photoselect_Rename.launch.pyw"
+    Delete "$INSTDIR\LICENSE"
+    Delete "$INSTDIR\README.md"
   ; Uninstall directories
     RMDir /r "$INSTDIR\Python"
     RMDir /r "$INSTDIR\lib"
 
   ; Uninstall shortcuts
-      Delete "$SMPROGRAMS\Photoselect.lnk"
+    RMDir /r "$SMPROGRAMS\${PRODUCT_NAME}"
   RMDir $INSTDIR
   DeleteRegKey SHCTX "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 SectionEnd
