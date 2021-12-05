@@ -97,6 +97,8 @@ class SelectWindow(object):
             controls_group = ImageControlsGroup(self, img_prev, lbl_prev, idx - 4, "THUMBNAIL", True)
             self.imageControls.append(controls_group)
 
+        self.imageControls[5].lblImage.configure(bg="#04f")
+
         self.prevScrollbar = tk.Scale(grp_previews, orient=tk.HORIZONTAL, from_=0, to=1, sliderlength=20,
                                       showvalue=False, command=self.scrollbar_handler)
         self.prevScrollbar.grid(column=0, row=2, sticky=tk.S+tk.E+tk.W, columnspan=9)
