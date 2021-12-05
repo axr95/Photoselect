@@ -118,7 +118,7 @@ class SelectWindow(object):
             self.path.set(start_path)
             self.reload_directory()
         else:
-            self.change_directory_handler()
+            self.root.after_idle(self.change_directory_handler)
 
         self.root.mainloop()
 
