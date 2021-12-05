@@ -38,6 +38,8 @@ class SelectWindow(object):
     EMPTY_CHECKBOX_IMG_BASE64_GIF = "R0lGODlhgACAAHAAACH5BAEAAPwALAAAAACAAIAAhwAAAAAAMwAAZgAAmQAAzAAA/wArAAArMwArZgArmQArzAAr/wBVAABVMwBVZgBVmQBVzABV/wCAAACAMwCAZgCAmQCAzACA/wCqAACqMwCqZgCqmQCqzACq/wDVAADVMwDVZgDVmQDVzADV/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMrADMrMzMrZjMrmTMrzDMr/zNVADNVMzNVZjNVmTNVzDNV/zOAADOAMzOAZjOAmTOAzDOA/zOqADOqMzOqZjOqmTOqzDOq/zPVADPVMzPVZjPVmTPVzDPV/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YrAGYrM2YrZmYrmWYrzGYr/2ZVAGZVM2ZVZmZVmWZVzGZV/2aAAGaAM2aAZmaAmWaAzGaA/2aqAGaqM2aqZmaqmWaqzGaq/2bVAGbVM2bVZmbVmWbVzGbV/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5krAJkrM5krZpkrmZkrzJkr/5lVAJlVM5lVZplVmZlVzJlV/5mAAJmAM5mAZpmAmZmAzJmA/5mqAJmqM5mqZpmqmZmqzJmq/5nVAJnVM5nVZpnVmZnVzJnV/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wrAMwrM8wrZswrmcwrzMwr/8xVAMxVM8xVZsxVmcxVzMxV/8yAAMyAM8yAZsyAmcyAzMyA/8yqAMyqM8yqZsyqmcyqzMyq/8zVAMzVM8zVZszVmczVzMzV/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8rAP8rM/8rZv8rmf8rzP8r//9VAP9VM/9VZv9Vmf9VzP9V//+AAP+AM/+AZv+Amf+AzP+A//+qAP+qM/+qZv+qmf+qzP+q///VAP/VM//VZv/Vmf/VzP/V////AP//M///Zv//mf//zP///wAAAAAAAAAAAAAAAAj/AAEIHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDNq3Mixo8ePIEOKHEmypMmTKFOqXMlS5b6XMGPKnEmzps2bOHPq3EkTIs+fQIMKHdrzIdGjSJMe9am0qdOnMplCnUp1qNSqWLPevKq1q1euXsNWBSu2rFOyZtMuNaq2bVK0buPqhCu3bk26dvPCxKs3L9++df8Cjit4cNvChtMiTlx2MeOwjh93jSw5K+XKY9litnt5M9TOns9qDu0WNOm3o08rTq26MevWkF/Dnix7tuXatjM7zO16N+/Yvn/TDi78NvHiuhsi12p6+VbczpE2j170OPWm06/HzK79Jffu37WHWL8+nnr56Oedp1++Hnn74u+Fx/89n3f93Pdt55+9H3b/1v+pFuBpA5JWYGgHepbgZgti1mBlD0oW4WMTMlZhYhcaluFgGwLWYV8f6hWiX9B1B9SInJVoIk9uKAam4opzvQgjTi3KVSNhMs5o042l5ahjdcr9SBSPh/ko5HZGHuldkkoSqZaTq1mnZIxSTkkjk0dCaZaWvQVpJYtYCsmlWGMC5+WXVJ6J5pVVrjlTS3DGKeecdNZp55145qnnnnz26eefgAZqUEAAOw=="
     TICKED_CHECKBOX_IMG_BASE64_GIF = "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"
 
+    CHECKBOX_POPUP_DURATION = 1500
+
     def __init__(self, start_path=None):
         root = tk.Tk()
         root.title("Bitte Verzeichnis auswählen!")
@@ -183,6 +185,7 @@ class SelectWindow(object):
                 self.cur_idx = len(self.images) - 1
             self.prevScrollbar.set(self.cur_idx)
             self.reload_view()
+            self.show_checkbox_popup()
         return change_cur_handler
 
     def get_select_handler(self, offset):
@@ -196,11 +199,7 @@ class SelectWindow(object):
                 new_state = 1 - self.images[self.cur_idx + offset].selected.get()
                 self.images[self.cur_idx + offset].selected.set(new_state)
                 if offset == 0:
-                    if self.popup_cb_id:
-                        self.root.after_cancel(self.popup_cb_id)
-                    self.checkbox_popups[1 - new_state].place_forget()
-                    self.checkbox_popups[new_state].place(x=0, y=0)
-                    self.popup_cb_id = self.root.after(2500, self.checkbox_popups[new_state].place_forget)
+                    self.show_checkbox_popup()
 
         return select_handler
 
@@ -324,6 +323,16 @@ class SelectWindow(object):
                 for img in self.images:
                     img.selected.set(1)
 
+    def show_checkbox_popup(self):
+        state = self.images[self.cur_idx].selected.get()
+
+        if self.popup_cb_id:
+            self.root.after_cancel(self.popup_cb_id)
+        self.checkbox_popups[1 - state].place_forget()
+        self.checkbox_popups[state].place(x=0, y=0)
+        self.popup_cb_id = self.root.after(SelectWindow.CHECKBOX_POPUP_DURATION,
+                                           self.checkbox_popups[state].place_forget)
+
     def reload_directory(self):
         """(Re-)loads the directory of the current path."""
         starttime = time()
@@ -346,11 +355,6 @@ class SelectWindow(object):
         # assert (0 <= self.cur_idx < len(self.images))
         for group in self.imageControls:
             group.reload_view()
-
-        for i in (0, 1):
-            self.checkbox_popups[i].place_forget()
-            if self.popup_cb_id:
-                self.root.after_cancel(self.popup_cb_id)
 
         if self.showThumbnails.get() == 1:
             self.btn_left.place(anchor="w", x=0, y=self.oldHeight // 2 if self.oldHeight else 0)
