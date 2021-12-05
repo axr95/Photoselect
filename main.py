@@ -76,8 +76,13 @@ class SelectWindow(object):
         # max sizes of images
         self.mainSize = 600, 600
 
-        self.mainImage = tk.Label(root)
+        self.mainImage = tk.Label(root)#, bg="#bbb")
         self.mainImage.pack(side="top")
+
+        self.btn_left = tk.Button(root, text="<", width=8, font=196, height=60, relief=tk.FLAT,
+                                  command=self.get_change_cur_handler(-1))
+        self.btn_right = tk.Button(root, text=">", width=8, font=196, height=60, relief=tk.FLAT,
+                                   command=self.get_change_cur_handler(1))
 
         self.imageControls.append(ImageControlsGroup(self, self.mainImage, tk.Checkbutton(root), 0, "MAIN", False))
 
@@ -152,6 +157,8 @@ class SelectWindow(object):
             for img in self.images:
                 img.thumbnail = None
 
+        self.prevScrollbar.configure(length=event.width)
+
         self.reload_view()
 
     def get_change_cur_handler(self, diff):
@@ -160,7 +167,7 @@ class SelectWindow(object):
         :param diff: The offset the handler should be adding to the currently selected index.
         :return: The handler-function that was created, which sets the selected index and reloads the view
         """
-        def change_cur_handler(_event):
+        def change_cur_handler(_event=None):
             self.cur_idx += diff
             if self.cur_idx < 0:
                 self.cur_idx = 0
@@ -327,8 +334,12 @@ class SelectWindow(object):
             group.reload_view()
 
         if self.showThumbnails.get() == 1:
+            self.btn_left.place(anchor="w", x=0, y=self.oldHeight // 2 if self.oldHeight else 0)
+            self.btn_right.place(anchor="e", x=self.oldWidth, y=self.oldHeight // 2 if self.oldHeight else 0)
             self.grpPreviews.place(anchor="sw", y=self.oldHeight)
         else:
+            self.btn_left.place_forget()
+            self.btn_right.place_forget()
             self.grpPreviews.place_forget()
         print("reloaded view in {0:0.3f}s".format(time() - starttime))
 
