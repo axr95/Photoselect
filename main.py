@@ -259,7 +259,10 @@ class SelectWindow(object):
                                     "Alle folgenden Elemente werden unwiderruflich gelöscht. Fortfahren?", img)
         if img:
             perform_action(lambda x: os.remove(x.path), img, "gelöscht")
-            self.reload_directory()
+            i = self.cur_idx
+            while i > 0 and self.images[self.cur_idx].selected.get():
+                i -= 1
+            self.reload_directory(self.images[i].name)
 
     def copy_images(self, img=None):
         """
@@ -295,7 +298,11 @@ class SelectWindow(object):
             perform_action(lambda x: shutil.copy2(x.path, destination), img, "kopiert")
         else:
             perform_action(lambda x: shutil.move(x.path, destination), img, "verschoben")
-            self.reload_directory()
+
+            i = self.cur_idx
+            while i > 0 and self.images[self.cur_idx].selected.get():
+                i -= 1
+            self.reload_directory(self.images[i].name)
 
     def change_directory_handler(self):
         """Changes the current directory, after asking the user for confirmation (iff a directory is already open)"""
@@ -333,8 +340,9 @@ class SelectWindow(object):
         self.popup_cb_id = self.root.after(SelectWindow.CHECKBOX_POPUP_DURATION,
                                            self.checkbox_popups[state].place_forget)
 
-    def reload_directory(self):
-        """(Re-)loads the directory of the current path."""
+    def reload_directory(self, select_name=None):
+        """(Re-)loads the directory of the current path.
+        If select_name is set, the image with the given name is selected as current image."""
         starttime = time()
         p = self.path.get()
         filepaths = [join(p, f) for f in os.listdir(p)]
@@ -343,6 +351,11 @@ class SelectWindow(object):
         print("sorted after {0:0.3f}s".format(time() - starttime))
         self.images = [SelectImage(fpath) for fpath in filepaths if isfile(fpath)]
         self.cur_idx = 0
+        if select_name:
+            for i, img in enumerate(self.images):
+                if img.name == select_name:
+                    self.cur_idx = i
+                    break
         print("prepared SelectImages after {0:0.3f}s".format(time() - starttime))
         self.showThumbnails.set(1)
         self.prevScrollbar.config(to=len(self.images)-1)
