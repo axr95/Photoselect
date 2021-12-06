@@ -47,10 +47,14 @@ jobs:
           pip install pynsist==2.7
       
       - name: Copy necessary files for install
-        run: ./installer/copy_tkinter_files.bat
+        run: |
+          ./installer/copy_tkinter_files.bat
+          copy ./installer/installer.cfg .
+          copy ./installer/template.nsi .
+          copy ./icons/icon.ico .
           
       - name: Run pynsist installer
-        run: pynsist installer/installer.cfg
+        run: pynsist installer.cfg
         
       - uses: actions/upload-artifact@v2
         with:
