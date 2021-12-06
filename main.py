@@ -25,7 +25,7 @@ import os
 from os.path import join, isfile
 import shutil
 
-from imagehelpers import SelectImage, ImageControlsGroup
+from imagehelpers import SelectImage, ImageControlsGroup, load_static_icon
 from rename import RenameDialog
 from file_action_util import perform_action, ListDialog
 
@@ -35,9 +35,6 @@ from time import time
 class SelectWindow(object):
     """The main Window where a user can view, select, and perform actions on images in a directory."""
 
-    EMPTY_CHECKBOX_IMG_BASE64_GIF = "R0lGODlhgACAAHAAACH5BAEAAPwALAAAAACAAIAAhwAAAAAAMwAAZgAAmQAAzAAA/wArAAArMwArZgArmQArzAAr/wBVAABVMwBVZgBVmQBVzABV/wCAAACAMwCAZgCAmQCAzACA/wCqAACqMwCqZgCqmQCqzACq/wDVAADVMwDVZgDVmQDVzADV/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMrADMrMzMrZjMrmTMrzDMr/zNVADNVMzNVZjNVmTNVzDNV/zOAADOAMzOAZjOAmTOAzDOA/zOqADOqMzOqZjOqmTOqzDOq/zPVADPVMzPVZjPVmTPVzDPV/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YrAGYrM2YrZmYrmWYrzGYr/2ZVAGZVM2ZVZmZVmWZVzGZV/2aAAGaAM2aAZmaAmWaAzGaA/2aqAGaqM2aqZmaqmWaqzGaq/2bVAGbVM2bVZmbVmWbVzGbV/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5krAJkrM5krZpkrmZkrzJkr/5lVAJlVM5lVZplVmZlVzJlV/5mAAJmAM5mAZpmAmZmAzJmA/5mqAJmqM5mqZpmqmZmqzJmq/5nVAJnVM5nVZpnVmZnVzJnV/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wrAMwrM8wrZswrmcwrzMwr/8xVAMxVM8xVZsxVmcxVzMxV/8yAAMyAM8yAZsyAmcyAzMyA/8yqAMyqM8yqZsyqmcyqzMyq/8zVAMzVM8zVZszVmczVzMzV/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8rAP8rM/8rZv8rmf8rzP8r//9VAP9VM/9VZv9Vmf9VzP9V//+AAP+AM/+AZv+Amf+AzP+A//+qAP+qM/+qZv+qmf+qzP+q///VAP/VM//VZv/Vmf/VzP/V////AP//M///Zv//mf//zP///wAAAAAAAAAAAAAAAAj/AAEIHEiwoMGDCBMqXMiwocOHECNKnEixosWLGDNq3Mixo8ePIEOKHEmypMmTKFOqXMlS5b6XMGPKnEmzps2bOHPq3EkTIs+fQIMKHdrzIdGjSJMe9am0qdOnMplCnUp1qNSqWLPevKq1q1euXsNWBSu2rFOyZtMuNaq2bVK0buPqhCu3bk26dvPCxKs3L9++df8Cjit4cNvChtMiTlx2MeOwjh93jSw5K+XKY9litnt5M9TOns9qDu0WNOm3o08rTq26MevWkF/Dnix7tuXatjM7zO16N+/Yvn/TDi78NvHiuhsi12p6+VbczpE2j170OPWm06/HzK79Jffu37WHWL8+nnr56Oedp1++Hnn74u+Fx/89n3f93Pdt55+9H3b/1v+pFuBpA5JWYGgHepbgZgti1mBlD0oW4WMTMlZhYhcaluFgGwLWYV8f6hWiX9B1B9SInJVoIk9uKAam4opzvQgjTi3KVSNhMs5o042l5ahjdcr9SBSPh/ko5HZGHuldkkoSqZaTq1mnZIxSTkkjk0dCaZaWvQVpJYtYCsmlWGMC5+WXVJ6J5pVVrjlTS3DGKeecdNZp55145qnnnnz26eefgAZqUEAAOw=="
-    TICKED_CHECKBOX_IMG_BASE64_GIF = "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"
-
     CHECKBOX_POPUP_DURATION = 1500
 
     def __init__(self, start_path=None):
@@ -46,9 +43,9 @@ class SelectWindow(object):
         self.root = root
 
         # store placeholder image
-        self.placeholder = tk.PhotoImage(data=SelectImage.PLACEHOLDER_IMG_BASE64_GIF)
-        self.empty_checkbox_img = tk.PhotoImage(data=SelectWindow.EMPTY_CHECKBOX_IMG_BASE64_GIF)
-        self.ticked_checkbox_img = tk.PhotoImage(data=SelectWindow.TICKED_CHECKBOX_IMG_BASE64_GIF)
+        self.placeholder = load_static_icon("placeholder.gif")
+        self.empty_checkbox_img = load_static_icon("checkbox_empty.gif")
+        self.ticked_checkbox_img = load_static_icon("checkbox_ticked.gif")
 
         self.imageControls = []
 
@@ -83,7 +80,7 @@ class SelectWindow(object):
         # max sizes of images
         self.mainSize = 600, 600
 
-        self.mainImage = tk.Label(root)#, bg="#bbb")
+        self.mainImage = tk.Label(root)
         self.mainImage.pack(side="top")
 
         self.btn_left = tk.Button(root, text="<", width=8, font=196, height=60, relief=tk.FLAT,
