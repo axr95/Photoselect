@@ -1,0 +1,58 @@
+# This should create a windows installer for this project and upload it as an artifact
+
+name: Create Installer from latest commit
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on pushing with a version tag
+  #push:
+  #  tags:
+  #  - "v*"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Setup Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: 3.8.5
+          cache: pip
+          architecture: x64
+          
+      - name: Install NSIS
+        run: |
+          Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+          scoop bucket add extras
+          scoop install nsis
+          
+      - name: Print NSIS version
+        run: makensis -VERSION
+      
+      - name: Install pynsist
+        run: |
+          python -m pip install --upgrade pip
+          pip install pynsist==2.7
+      
+      - name: Copy necessary files for install
+        run: installer\copy_tkinter_files.bat
+          
+      - name: Run pynsist installer
+        run: pynsist installer/installer.cfg
+        
+      - uses: actions/upload-artifact@v2
+        with:
+          name: installer
+          path: build/nsis/*.exe
