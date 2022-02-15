@@ -113,10 +113,19 @@ class SelectWindow(object):
         self.prevScrollbar.grid(column=0, row=2, sticky=tk.S+tk.E+tk.W, columnspan=9)
         self.grpPreviews = grp_previews
 
-        self.checkbox_popups = [tk.Label(image=self.empty_checkbox_img), tk.Label(image=self.ticked_checkbox_img)]
+        self.checkbox_popups = [
+            tk.Label(image=self.empty_checkbox_img, compound=tk.TOP, bd=-2, bg="#000", fg="#fff", padx=0, pady=2),
+            tk.Label(image=self.ticked_checkbox_img, compound=tk.TOP, bd=-2, bg="#000", fg="#fff", padx=0, pady=2)
+        ]
+        self.select_counter = tk.IntVar(0)
+
+        def _update_select_counter_label(_var, _index, _mode):
+            display_string = "{0} / {1}".format(self.select_counter.get(), len(self.images))
+            for label in self.checkbox_popups:
+                label.configure(text=display_string)
+        self.select_counter.trace_add("write", _update_select_counter_label)
 
         root.state("zoomed")
-
         root.bind("<Configure>", self.resize_handler)
 
         root.bind("<Left>", self.get_change_cur_handler(-1))
@@ -195,6 +204,7 @@ class SelectWindow(object):
             if 0 <= self.cur_idx + offset < len(self.images):
                 new_state = 1 - self.images[self.cur_idx + offset].selected.get()
                 self.images[self.cur_idx + offset].selected.set(new_state)
+                self.select_counter.set(self.select_counter.get() + (1 if new_state else -1))
                 if offset == 0:
                     self.show_checkbox_popup()
 
@@ -323,9 +333,11 @@ class SelectWindow(object):
             if all(map(lambda x: x.selected.get(), self.images)):
                 for img in self.images:
                     img.selected.set(0)
+                self.select_counter.set(0)
             else:
                 for img in self.images:
                     img.selected.set(1)
+                self.select_counter.set(len(self.images))
 
     def show_checkbox_popup(self):
         state = self.images[self.cur_idx].selected.get()
@@ -333,7 +345,7 @@ class SelectWindow(object):
         if self.popup_cb_id:
             self.root.after_cancel(self.popup_cb_id)
         self.checkbox_popups[1 - state].place_forget()
-        self.checkbox_popups[state].place(x=0, y=0)
+        self.checkbox_popups[state].place(x=2, y=2)
         self.popup_cb_id = self.root.after(SelectWindow.CHECKBOX_POPUP_DURATION,
                                            self.checkbox_popups[state].place_forget)
 
@@ -356,6 +368,8 @@ class SelectWindow(object):
         print("prepared SelectImages after {0:0.3f}s".format(time() - starttime))
         self.showThumbnails.set(1)
         self.prevScrollbar.config(to=len(self.images)-1)
+
+        self.select_counter.set(0)
 
         self.reload_view()
 
