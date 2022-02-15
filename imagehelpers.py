@@ -9,6 +9,7 @@ from PIL import ImageTk, Image, ImageOps
 class ImageControlsGroup(object):
     """A class that manages the display of an SelectImage, including the selection box, name, and image."""
     SIZES = {"MAIN": (600, 600), "SIDE": (400, 400), "THUMBNAIL": (128, 128)}
+    _NOVAR = None
 
     def __init__(self, base, image_label, name_checkbox, index_offset, size_name, is_thumbnail=False):
         """
@@ -24,6 +25,9 @@ class ImageControlsGroup(object):
         if not SelectImage.PLACEHOLDER_IMAGE:
             SelectImage.PLACEHOLDER_IMAGE = load_static_icon("placeholder.gif")
 
+        if not ImageControlsGroup._NOVAR:
+            ImageControlsGroup._NOVAR = tk.BooleanVar()
+
         self.base = base
         self.lblImage = image_label
         self.chkName = name_checkbox
@@ -33,6 +37,8 @@ class ImageControlsGroup(object):
 
         self._photoImage = None
         self._image = None
+
+
 
     def reload_view(self):
         """Refreshes the appearance of the current image, accounting for new sizes, changed indices, etc."""
@@ -50,8 +56,8 @@ class ImageControlsGroup(object):
             else:
                 self._photoImage = self.base.images[idx].get_image(size=size)
         else:
-            self.chkName.configure(variable=None, state=tk.DISABLED)
-            self.chkName.deselect()
+            self.chkName.configure(variable=ImageControlsGroup._NOVAR, state=tk.DISABLED)
+            # self.chkName.deselect()
 
             self._photoImage = SelectImage.PLACEHOLDER_IMAGE
             self._image = None
@@ -117,12 +123,14 @@ class SelectImage(object):
         return self.name
 
 
-def load_static_icon(filename: str) -> ImageTk.PhotoImage:
+def load_static_icon(filename: str, size:tuple=None) -> ImageTk.PhotoImage:
     """
     Loads a static icon from the icons folder of the application. To be used for GUI-icons like placeholder-icons etc.
     :param filename: The filename of the image file that is located in the icons directory
+    :param size: A tuple of ints describing the desired image size in pixels. Defaults to None: no resize
     :return: A PhotoImage that was loaded.
     """
-
     with Image.open(join(dirname(sys.modules['__main__'].__file__), "icons", filename)) as im:
+        if size:
+            im.thumbnail(size)
         return ImageTk.PhotoImage(im)
