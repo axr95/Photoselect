@@ -1,10 +1,10 @@
 !define PRODUCT_NAME "Photoselect"
-!define PRODUCT_VERSION "1.2"
+!define PRODUCT_VERSION "1.2.1"
 !define PY_VERSION "3.8.5"
 !define PY_MAJOR_VERSION "3.8"
 !define BITNESS "64"
 !define ARCH_TAG ".amd64"
-!define INSTALLER_NAME "Photoselect_1.2.exe"
+!define INSTALLER_NAME "Photoselect_1.2.1.exe"
 !define PRODUCT_ICON "icon.ico"
 
 ; Marker file to tell the uninstaller that it's a user installation
