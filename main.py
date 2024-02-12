@@ -59,11 +59,14 @@ class SelectWindow(object):
         self.cur_idx = 0
 
         self.showThumbnails = tk.BooleanVar()
+        self.showSelectionStatePermanently = tk.BooleanVar(value=0)
 
         m = tk.Menu(title="Aktionen")
         m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
         m.add_command(label="Alle Dateien umbenennen ...", command=self.rename_handler)
         m.add_checkbutton(label="Navigation anzeigen", variable=self.showThumbnails, command=self.reload_view)
+        m.add_checkbutton(label="Selektionsstatus immer anzeigen", variable=self.showSelectionStatePermanently,
+                          command=self.show_checkbox_popup)
         m.add_separator()
         m.add_command(label="Alles markieren/demarkieren", command=self.mark_all_handler)
         m.add_separator()
@@ -336,13 +339,14 @@ class SelectWindow(object):
 
         if self.popup_cb_id:
             self.root.after_cancel(self.popup_cb_id)
+            self.popup_cb_id = None
 
         self.checkbox_popup.configure(image=self.ticked_checkbox_img if state else self.empty_checkbox_img,
                                       text="{} / {}\nmarkiert:\n{}".format(
                                            self.cur_idx + 1, len(self.images), self.select_counter.get()))
         self.checkbox_popup.place(x=self.oldWidth - 2, y=2, anchor=tk.NE)
-        self.popup_cb_id = self.root.after(SelectWindow.CHECKBOX_POPUP_DURATION,
-                                           self.checkbox_popup.place_forget)
+        if self.showSelectionStatePermanently.get() == 0:
+            self.popup_cb_id = self.root.after(SelectWindow.CHECKBOX_POPUP_DURATION, self.checkbox_popup.place_forget)
 
     def _update_select_counter(self, var, _index, _mode):
         newvalue = self.select_counter.get() + (1 if self.root.getvar(var) else -1)
