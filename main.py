@@ -22,7 +22,7 @@ from tkinter.messagebox import showerror, askyesno, showinfo
 
 import sys
 import os
-from os.path import join, isfile
+from os.path import join, isfile, normpath
 import shutil
 
 from imagehelpers import SelectImage, ImageControlsGroup, load_static_icon
@@ -52,7 +52,6 @@ class SelectWindow(object):
 
         # path of folder
         self.path = tk.StringVar()
-        self.path.trace_add("write", self.title_handler)
 
         # image storage
         self.images = []
@@ -145,10 +144,6 @@ class SelectWindow(object):
             self.root.after_idle(self.change_directory_handler)
 
         self.root.mainloop()
-
-    def title_handler(self, *_event):
-        """Sets the title of the window to the current path"""
-        self.root.title(self.path.get())
 
     def resize_handler(self, event):
         """(Re-)Schedules a resize to be done in 200ms, to provide smoother experience during resizing.
@@ -376,7 +371,7 @@ class SelectWindow(object):
         If select_name is set, the image with the given name is selected as current image."""
         starttime = time()
         p = self.path.get()
-        filepaths = [join(p, f) for f in os.listdir(p)]
+        filepaths = [normpath(join(p, f)) for f in os.listdir(p)]
         print("got filepaths in {0:0.3f}s".format(time() - starttime))
         filepaths.sort()
         print("sorted after {0:0.3f}s".format(time() - starttime))
@@ -404,6 +399,8 @@ class SelectWindow(object):
         for group in self.imageControls:
             group.reload_view()
 
+        self.root.title(self.images[self.cur_idx].path)
+
         if self.showThumbnails.get() == 1:
             self.btn_left.place(anchor="w", x=0, y=self.oldHeight // 2 if self.oldHeight else 0)
             self.btn_right.place(anchor="e", x=self.oldWidth, y=self.oldHeight // 2 if self.oldHeight else 0)
@@ -412,7 +409,7 @@ class SelectWindow(object):
             self.btn_left.place_forget()
             self.btn_right.place_forget()
             self.grpPreviews.place_forget()
-        print("reloaded view in {0:0.3f}s".format(time() - starttime))
+        # print("reloaded view in {0:0.3f}s".format(time() - starttime))
 
     def show_about(self):
         showinfo("About", LICENSE)
