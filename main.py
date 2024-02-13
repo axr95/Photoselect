@@ -59,12 +59,15 @@ class SelectWindow(object):
         self.cur_idx = 0
 
         self.showThumbnails = tk.BooleanVar()
+        self.showThumbnailsOverlaying = tk.BooleanVar()
         self.showSelectionStatePermanently = tk.BooleanVar(value=0)
 
         m = tk.Menu(title="Aktionen")
         m.add_command(label="Verzeichnis auswählen ...", command=self.change_directory_handler)
         m.add_command(label="Alle Dateien umbenennen ...", command=self.rename_handler)
-        m.add_checkbutton(label="Navigation anzeigen", variable=self.showThumbnails, command=self.reload_view)
+        m.add_checkbutton(label="Navigation anzeigen", variable=self.showThumbnails, command=self.do_resize)
+        m.add_checkbutton(label="Überlappende Navigation", variable=self.showThumbnailsOverlaying,
+                          command=self.do_resize)
         m.add_checkbutton(label="Selektionsstatus immer anzeigen", variable=self.showSelectionStatePermanently,
                           command=self.show_checkbox_popup)
         m.add_separator()
@@ -148,30 +151,45 @@ class SelectWindow(object):
         self.root.title(self.path.get())
 
     def resize_handler(self, event):
-        """(Re-)Schedules a resize to be done in 200ms, to provide smoother experience during resizing"""
-        if event.widget == self.root and (event.width != self.oldWidth):
-            if self.resize_cb_id:
-                self.root.after_cancel(self.resize_cb_id)
-            self.resize_cb_id = self.root.after(200, self.do_resize, event)
+        """(Re-)Schedules a resize to be done in 200ms, to provide smoother experience during resizing.
+            On first resize, does it immediately.
+        """
+        if event.widget == self.root and (event.width != self.oldWidth or event.height != self.oldHeight):
+            if self.oldWidth is None:
+                self.do_resize(event.width, event.height)
+            else:
+                if self.resize_cb_id:
+                    self.root.after_cancel(self.resize_cb_id)
+                self.resize_cb_id = self.root.after(200, self.do_resize, event.width, event.height)
 
-    def do_resize(self, event):
+    def do_resize(self, width=None, height=None):
         """Recomputes the needed sizes of all images for new windows size and triggers a refresh"""
         # print("RESIZE")
-        self.oldWidth = event.width
-        self.oldHeight = event.height
+        if width is None:
+            width = self.oldWidth
+        if height is None:
+            height = self.oldHeight
+        if height is None or width is None:
+            raise AssertionError("Width and height must be already set or provided with resize call")
+
+        self.oldWidth = width
+        self.oldHeight = height
         self.resize_cb_id = None
-        size_thumbnail = (event.width - 45) // 9
+        width_thumbnail = (width - 45) // 9
+        thumbnail_size = (width_thumbnail, width_thumbnail * 3 // 4)
 
-        ImageControlsGroup.SIZES["MAIN"] = (event.width, event.height)
+        if self.showThumbnails.get() == 1 and self.showThumbnailsOverlaying.get() == 0:
+            ImageControlsGroup.SIZES["MAIN"] = (width - 16, height - width_thumbnail - 24)  # leaves room for UI
+        else:
+            ImageControlsGroup.SIZES["MAIN"] = (width, height)
 
-        SelectImage.THUMBNAIL_SIZE = (size_thumbnail, size_thumbnail * 3 // 4)
-        ImageControlsGroup.SIZES["THUMBNAIL"] = SelectImage.THUMBNAIL_SIZE
+        if SelectImage.THUMBNAIL_SIZE != thumbnail_size:
+            SelectImage.THUMBNAIL_SIZE = thumbnail_size
+            ImageControlsGroup.SIZES["THUMBNAIL"] = thumbnail_size
 
-        if self.images:
-            for img in self.images:
-                img.thumbnail = None
-
-        self.prevScrollbar.configure(length=event.width)
+            if self.images:
+                for img in self.images:
+                    img.thumbnail = None
 
         self.reload_view()
 
