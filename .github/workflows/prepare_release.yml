@@ -23,10 +23,10 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8.5
           cache: pip
@@ -35,7 +35,7 @@ jobs:
       - name: Install NSIS
         run: |
           Invoke-RestMethod -Uri get.scoop.sh -Outfile scoop-installer.ps1
-          Invoke-Expression "scoop-installer.ps1 -RunAsAdmin"
+          ./scoop-installer.ps1 -RunAsAdmin
           scoop bucket add extras
           scoop install nsis
           
@@ -57,7 +57,7 @@ jobs:
       - name: Run pynsist installer
         run: pynsist installer.cfg
         
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: installer
           path: build/nsis/*.exe
