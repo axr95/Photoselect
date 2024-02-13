@@ -34,7 +34,8 @@ jobs:
           
       - name: Install NSIS
         run: |
-          Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+          Invoke-RestMethod -Uri get.scoop.sh -Outfile scoop-installer.ps1
+          Invoke-Expression "scoop-installer.ps1 -RunAsAdmin"
           scoop bucket add extras
           scoop install nsis
           
